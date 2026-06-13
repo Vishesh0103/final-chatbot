@@ -11,7 +11,7 @@ import regex as re
 
 # ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Smart Chatbot",
+    page_title="Vishesh's Chatbot",
     page_icon="🤖",
     layout="wide",
 )
@@ -146,7 +146,7 @@ def build_history_context() -> str:
 #  UI
 # ════════════════════════════════════════════════════════════════════════════════
 
-st.title("🤖 Smart Chatbot")
+st.title("🤖 Vishesh's Chatbot")
 st.caption("Powered by Gemini · RAG · Web Search")
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
