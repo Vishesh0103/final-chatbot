@@ -163,12 +163,19 @@ with st.sidebar:
 
     if uploaded_files:
         if st.button("➕ Add to Knowledge Base", use_container_width=True):
-            with st.spinner("Processing documents…"):
-                success = add_documents_to_store(uploaded_files)
-            if success:
-                st.success(f"✅ Added {len(uploaded_files)} file(s)!")
-            else:
-                st.error("Could not process the files. Please check the format.")
+            try:
+                with st.spinner("Processing documents…"):
+                    success = add_documents_to_store(uploaded_files)
+                if success:
+                    st.success(f"✅ Added {len(uploaded_files)} file(s)!")
+                else:
+                    st.error("Could not process the files.")
+        
+            except Exception as e:
+                if "quota" in str(e).lower() or "429" in str(e):
+                    st.error("⚠️ Google API quota expired. Cannot generate embeddings right now.")
+                else:
+                    st.error(f"❌ Error processing files: {str(e)}")
 
     if st.session_state.doc_names:
         st.divider()
@@ -215,7 +222,27 @@ if user_input := st.chat_input("Ask me anything…"):
                 f"Previous conversation:\n{history_ctx}\n\nNew question: {user_input}"
                 if history_ctx else user_input
             )
-            answer, source = get_answer(query_with_ctx)
+            try:
+                answer, source = get_answer(query_with_ctx)
+            
+            except Exception as e:
+                error_msg = str(e).lower()
+        
+                if "quota" in error_msg or "429" in error_msg or "rate limit" in error_msg:
+                    answer = "⚠️ Google API quota has expired or rate limit reached. Please check your Gemini API key usage at [aistudio.google.com](https://aistudio.google.com) and try again later."
+                    source = "❌ API Error"
+                
+                elif "api key" in error_msg or "invalid" in error_msg or "401" in error_msg:
+                    answer = "🔑 Invalid or missing API key. Please check your **GEMINI_API_KEY** in Streamlit Secrets."
+                    source = "❌ Auth Error"
+                
+                elif "network" in error_msg or "connection" in error_msg:
+                    answer = "🌐 Network error. Please check your internet connection and try again."
+                    source = "❌ Network Error"
+                
+                else:
+                    answer = f"❌ Something went wrong: {str(e)}"
+                    source = "❌ Unknown Error"
 
         st.markdown(answer)
         st.caption(f"Source: {source}")
